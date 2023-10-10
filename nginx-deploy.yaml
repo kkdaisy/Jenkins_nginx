@@ -1,19 +1,12 @@
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: v1
+kind: Pod
 metadata:
   name: nginx
+  labels:
+    app: nginx  # 이 라벨은 Selector와 연결됩니다.
 spec:
-  replicas: 3
-  selector:
-    matchLabels:
-      app: nginx
-  template:
-    metadata:
-      labels:
-        app: nginx
-    spec:
-      containers:
-      - name: nginx
-        image: kkmee0209/jennginx:v1
-        ports:
+  containers:
+    - name: nginx-container
+      image: kkmee0209/nginxtest:v1 # 빌드한 Nginx 이미지의 이름
+      ports:
         - containerPort: 80
