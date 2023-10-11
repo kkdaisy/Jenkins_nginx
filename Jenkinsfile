@@ -22,7 +22,7 @@ pipeline {
                     def dockerImage = docker.build("${IMAGE_NAME}:${TAG}", "--file Dockerfile .")
 
                     // Docker Hub에 로그인
-                    docker.withRegistry('https://index.docker.io/v1/', 'docker') {
+                    docker.withRegistry('https://index.docker.io/v1/', 'docker-hub-credentials') {
                         // Docker 이미지 푸시
                         dockerImage.push()
                     }
@@ -30,4 +30,15 @@ pipeline {
             }
         }
     }
+        stage('Deploy to AKS') {
+            steps {
+                script {
+                    // Kubernetes 클러스터에 연결
+                    //withKubeConfig(credentialsId: 'kube-config', doNotReplace: true) {
+                        // Kubernetes 클러스터에 배포
+                        sh "kubectl set image deployment/nginx-deployment nginx=${IMAGE_NAME}:${TAG}"
+                    }
+                }
+            }
+        }
 }
