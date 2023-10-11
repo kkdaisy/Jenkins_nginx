@@ -2,9 +2,10 @@ pipeline {
     agent any
 
     environment {
-        DOCKERHUB_CREDENTIALS = credentials('docker') // Jenkins에 등록한 Docker Hub 자격 증명
-        IMAGE_NAME = "kkmee0209/nginxtest" // Docker Hub 이미지 이름
+        DOCKERHUB_CREDENTIALS = credentials('docker') // Docker Hub 자격 증명
+        IMAGE_NAME = "kkmee0209/nginxtest" // Docker 이미지 이름
         TAG = "latest" // 이미지 태그 (원하는 태그로 변경)
+        KUBE_CONFIG = credentials('kube-config') // Kubernetes 클러스터 구성 파일 (Kubeconfig) 자격 증명
     }
 
     stages {
@@ -22,22 +23,24 @@ pipeline {
                     def dockerImage = docker.build("${IMAGE_NAME}:${TAG}", "--file Dockerfile .")
 
                     // Docker Hub에 로그인
-                    docker.withRegistry('https://index.docker.io/v1/', 'docker-hub-credentials') {
+                    docker.withRegistry('https://index.docker.io/v1/', 'docker') {
                         // Docker 이미지 푸시
                         dockerImage.push()
                     }
                 }
             }
         }
-    }
+
         stage('Deploy to AKS') {
             steps {
                 script {
                     // Kubernetes 클러스터에 연결
-                    //withKubeConfig(credentialsId: 'kube-config', doNotReplace: true) {
+                    withKubeConfig(credentialsId: 'kube-config', doNotReplace: true) {
                         // Kubernetes 클러스터에 배포
-                        sh "kubectl set image deployment/your-deployment-name your-container-name=${IMAGE_NAME}:${TAG}"
+                        sh "kubectl set image deployment/nginx-deployment nginx=${IMAGE_NAME}:${TAG}"
                     }
                 }
             }
         }
+    }
+}
