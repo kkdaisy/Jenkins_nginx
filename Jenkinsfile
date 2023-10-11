@@ -26,9 +26,6 @@ pipeline {
 
                     // Docker Hub에 로그인
                     docker.withRegistry('https://index.docker.io/v1/', 'docker') {
-                        // Docker 이미지 푸시 (latest 태그)
-                        latestImage.push()
-                        
                         // Docker 이미지 푸시 (빌드 번호 태그)
                         buildImage.push()
                     }
