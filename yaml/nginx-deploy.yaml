@@ -3,7 +3,7 @@ kind: Pod
 metadata:
   name: nginx
   labels:
-    app: nginx  # 이 라벨은 Selector와 연결됩니다.
+    app: nginx # 이 라벨은 Selector와 연결됩니다.
 spec:
   containers:
     - name: nginx-container
