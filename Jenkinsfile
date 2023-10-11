@@ -4,7 +4,8 @@ pipeline {
     environment {
         DOCKERHUB_CREDENTIALS = credentials('docker') // Docker Hub 자격 증명
         IMAGE_NAME = "kkmee0209/nginxtest" // Docker 이미지 이름
-        TAG = "latest" // 이미지 태그 (원하는 태그로 변경)
+        LATEST_TAG = "latest" // latest 태그
+        BUILD_TAG = "${BUILD_NUMBER}" // 빌드 번호를 태그로 사용
         KUBE_CONFIG = credentials('kube-config') // Kubernetes 클러스터 구성 파일 (Kubeconfig) 자격 증명
     }
 
@@ -16,16 +17,22 @@ pipeline {
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Build Docker Images') {
             steps {
                 script {
-                    // Docker 이미지 빌드
-                    def dockerImage = docker.build("${IMAGE_NAME}:${TAG}", "--file Dockerfile .")
+                    // Docker 이미지 빌드 (latest 태그)
+                    def latestImage = docker.build("${IMAGE_NAME}:${LATEST_TAG}", "--file Dockerfile .")
+                    
+                    // Docker 이미지 빌드 (빌드 번호 태그)
+                    def buildImage = docker.build("${IMAGE_NAME}:${BUILD_TAG}", "--file Dockerfile .")
 
                     // Docker Hub에 로그인
                     docker.withRegistry('https://index.docker.io/v1/', 'docker') {
-                        // Docker 이미지 푸시
-                        dockerImage.push()
+                        // Docker 이미지 푸시 (latest 태그)
+                        latestImage.push()
+                        
+                        // Docker 이미지 푸시 (빌드 번호 태그)
+                        buildImage.push()
                     }
                 }
             }
@@ -36,8 +43,8 @@ pipeline {
                 script {
                     // Kubernetes 클러스터에 연결
                     withKubeConfig(credentialsId: 'kube-config', doNotReplace: true) {
-                        // Kubernetes 클러스터에 배포
-                        sh "kubectl set image deployment/nginx-deployment nginx=${IMAGE_NAME}:${TAG}"
+                        // Kubernetes 클러스터에 배포 (latest 태그)
+                        sh "kubectl set image deployment/nginx-deployment nginx=${IMAGE_NAME}:${LATEST_TAG}"
                     }
                 }
             }
