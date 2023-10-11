@@ -20,8 +20,6 @@ pipeline {
         stage('Build Docker Images') {
             steps {
                 script {
-                    // Docker 이미지 빌드 (latest 태그)
-                    def latestImage = docker.build("${IMAGE_NAME}:${LATEST_TAG}", "--file Dockerfile .")
                     
                     // Docker 이미지 빌드 (빌드 번호 태그)
                     def buildImage = docker.build("${IMAGE_NAME}:${BUILD_TAG}", "--file Dockerfile .")
@@ -44,7 +42,7 @@ pipeline {
                     // Kubernetes 클러스터에 연결
                     withKubeConfig(credentialsId: 'kube-config', doNotReplace: true) {
                         // Kubernetes 클러스터에 배포 (latest 태그)
-                        sh "kubectl set image deployment/nginx-deployment nginx=${IMAGE_NAME}:latest"
+                        sh "kubectl set image deployment/nginx-deployment nginx=${IMAGE_NAME}:${BUILD_TAG}"
                     }
                 }
             }
